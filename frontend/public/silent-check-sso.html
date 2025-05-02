@@ -1,14 +1,10 @@
+<!-- public/silent-check-sso.html -->
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Silent Check SSO</title>
-    <meta charset="utf-8">
+    <script>
+        parent.postMessage(location.href, location.origin);
+    </script>
 </head>
-<body>
-<script>
-    window.onload = function() {
-        parent.postMessage(window.location.href, window.location.origin);
-    };
-</script>
-</body>
+<body></body>
 </html>

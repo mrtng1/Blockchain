@@ -1,15 +1,45 @@
-import React from 'react';
+// src/components/Navbar.js
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { login, logout } from '../service/AuthService';
+import authService from '../service/AuthService';
 
-const Navbar = ({ auth }) => {
+export default function Navbar() {
+    const [isLoggedIn, setIsLoggedIn] = useState(!!authService.getToken());
+    const [username, setUsername] = useState('');
+
+    useEffect(() => {
+        // Once initialized, Keycloak has parsed the token
+        if (authService.keycloak.authenticated) {
+            setIsLoggedIn(true);
+            setUsername(authService.keycloak.tokenParsed?.preferred_username || '');
+        }
+
+        // Optional: listen for token refreshes to update username if it changes
+        const refreshInterval = setInterval(() => {
+            if (authService.keycloak.authenticated && !isLoggedIn) {
+                setIsLoggedIn(true);
+                setUsername(authService.keycloak.tokenParsed?.preferred_username || '');
+            }
+            if (!authService.keycloak.authenticated && isLoggedIn) {
+                setIsLoggedIn(false);
+                setUsername('');
+            }
+        }, 1000);
+
+        return () => clearInterval(refreshInterval);
+    }, [isLoggedIn]);
+
+    const handleLogin = () => authService.login();
+    const handleLogout = () => authService.logout();
+
     const buttonStyle = {
         background: 'none',
         border: '1px solid white',
         color: 'white',
         padding: '0.5rem 1rem',
         cursor: 'pointer',
-        transition: 'all 0.3s ease'
+        transition: 'all 0.3s ease',
+        backgroundColor: 'transparent',
     };
 
     return (
@@ -22,30 +52,30 @@ const Navbar = ({ auth }) => {
             color: 'white'
         }}>
             <h3 style={{ margin: 0 }}>Crypto-blockchain</h3>
+
             <div style={{ display: 'flex', gap: '1rem', marginLeft: 'auto' }}>
                 <Link to="/" style={{ color: 'white', textDecoration: 'none' }}>
                     Home
                 </Link>
-                {auth.isLoggedIn ? (
+
+                {isLoggedIn ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <span style={{ color: '#00ff9d' }}>
-                            Welcome, {auth.username}
-                        </span>
+                        <span style={{ color: '#00ff9d' }}>Welcome, {username}</span>
                         <button
-                            onClick={logout}
+                            onClick={handleLogout}
                             style={buttonStyle}
-                            onMouseOver={(e) => e.target.style.backgroundColor = '#ffffff22'}
-                            onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                            onMouseOver={e => e.currentTarget.style.backgroundColor = '#ffffff22'}
+                            onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}
                         >
                             Logout
                         </button>
                     </div>
                 ) : (
                     <button
-                        onClick={login}
+                        onClick={handleLogin}
                         style={buttonStyle}
-                        onMouseOver={(e) => e.target.style.backgroundColor = '#ffffff22'}
-                        onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+                        onMouseOver={e => e.currentTarget.style.backgroundColor = '#ffffff22'}
+                        onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}
                     >
                         Login
                     </button>
@@ -53,6 +83,4 @@ const Navbar = ({ auth }) => {
             </div>
         </nav>
     );
-};
-
-export default Navbar;
+}

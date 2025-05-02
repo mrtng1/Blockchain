@@ -1,28 +1,50 @@
-version: '3.9'
+version: '3.8'
 
 services:
-  postgres:
-    image: postgres:16
-    environment:
-      POSTGRES_DB: ${POSTGRESQL_DB}
-      POSTGRES_USER: ${POSTGRESQL_USER}
-      POSTGRES_PASSWORD: ${POSTGRESQL_PASS}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
   keycloak:
-    image: quay.io/keycloak/keycloak:${KEYCLOAK_VERSION}
-    environment:
-      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN_USER}
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASS}
-      KC_DB: postgres
-      KC_DB_URL: jdbc:postgresql://postgres/${POSTGRESQL_DB}
-      KC_DB_USERNAME: ${POSTGRESQL_USER}
-      KC_DB_PASSWORD: ${POSTGRESQL_PASS}
+    image: quay.io/keycloak/keycloak:21.1.0
+    container_name: keycloak
     ports:
-      - 8080:8080
+      - "8080:8080"
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HTTP_CORS_ORIGINS: "http://localhost:3000"
+      KC_HTTP_CORS_ALLOWED_METHODS: "GET,POST,PUT,DELETE"
+      KC_HTTP_CORS_ALLOW_CREDENTIALS: "true"
+      KC_HOSTNAME: "localhost"
+    volumes:
+      - kc_data:/opt/keycloak/data
+      - ./master-realm.json:/opt/keycloak/data/import/master-realm.json
     command:
       - start-dev
+      - --features=admin-fine-grained-authz
+      - --import-realm
+
+  backend:
+    container_name: backend
+    build:
+      context: ./backend
+    ports:
+      - "5215:80"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+    depends_on:
+      - keycloak
+
+  frontend:
+    container_name: frontend
+    build:
+      context: ./frontend
+    ports:
+      - "3000:3000"
+    stdin_open: true
+    tty: true
+    environment:
+      REACT_APP_BACKEND_URL: http://localhost:5215
+    depends_on:
+      - backend
+      - keycloak
 
 volumes:
-  postgres_data:
+  kc_data:
