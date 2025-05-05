@@ -107,6 +107,8 @@ const styles = {
         padding: '10px',
         borderRadius: '4px',
         overflowX: 'auto',
+        wordBreak: 'break-all',
+        color: 'black',
     },
     loadingContainer: {
         display: 'flex',

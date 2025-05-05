@@ -8,13 +8,11 @@ export default function Navbar() {
     const [username, setUsername] = useState('');
 
     useEffect(() => {
-        // Once initialized, Keycloak has parsed the token
         if (authService.keycloak.authenticated) {
             setIsLoggedIn(true);
             setUsername(authService.keycloak.tokenParsed?.preferred_username || '');
         }
 
-        // Optional: listen for token refreshes to update username if it changes
         const refreshInterval = setInterval(() => {
             if (authService.keycloak.authenticated && !isLoggedIn) {
                 setIsLoggedIn(true);

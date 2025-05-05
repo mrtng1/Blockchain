@@ -25,31 +25,3 @@ export async function minePending(minerAddress) {
     const data = await response.json();
     return data;
 }
-
-
-/**
- * Sends a POST request to create a new wallet.
- *
- * @returns {Promise<{ address: string, privateKey: string }>} Resolves to the new wallet DTO.
- * @throws {Error} if the network request fails or returns non-OK.
- */
-export async function createWallet() {
-    const url = `${API_URL}/api/Blockchain/Wallets`;
-    const token = authService.getToken();
-
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-            ...(token && { Authorization: `Bearer ${token}` }),
-        },
-    });
-
-    if (!response.ok) {
-        const text = await response.text();
-        throw new Error(`Error creating wallet: ${response.status} ${text}`);
-    }
-
-    return response.json();
-}

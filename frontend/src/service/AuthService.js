@@ -1,79 +1,105 @@
-// src/service/AuthService.js
 import Keycloak from 'keycloak-js';
-import { KEYCLOAK_URL } from '../environment';
+import { KEYCLOAK_URL, KEYCLOAK_REALM, KEYCLOAK_CLIENT } from '../environment';
 
 class AuthService {
     constructor() {
         this.keycloak = new Keycloak({
-            url: `${KEYCLOAK_URL}`,   // make sure the “/auth” path is included
-            realm: 'master',
-            clientId: 'blockchainapp',
+            url: KEYCLOAK_URL,
+            realm: KEYCLOAK_REALM,
+            clientId: KEYCLOAK_CLIENT,
         });
-        this.token = null;
-        this.refreshToken = null;
+        this.initialized = false;
+        this.tokenRefreshInterval = null;
     }
 
     /**
-     * Initialize Keycloak instance.
-     * @param {Function} onInitialized - Called once Keycloak has finished its init (regardless of auth state)
+     * Initialize Keycloak instance
+     * @returns {Promise<boolean>} Authentication status
      */
-    init(onInitialized) {
-        this.keycloak
-            .init({
-                onLoad: 'check-sso',
-                pkceMethod: 'S256',
-                checkLoginIframe: false,
-                silentCheckSsoRedirectUri:
-                    window.location.origin + '/silent-check-sso.html',
-            })
-            .then((authenticated) => {
+    init() {
+        return this.keycloak.init({
+            onLoad: 'check-sso',
+            pkceMethod: 'S256',
+            checkLoginIframe: false,
+            silentCheckSsoRedirectUri: window.location.origin + '/silent-check-sso.html',
+        })
+            .then(authenticated => {
+                this.initialized = true;
                 if (authenticated) {
-                    this.token = this.keycloak.token;
-                    this.refreshToken = this.keycloak.refreshToken;
                     this.setupTokenRefresh();
                 }
-                // fire the callback whether or not the user is authenticated
-                onInitialized(authenticated);
+                return authenticated;
             })
-            .catch((err) => console.error('Keycloak init error:', err));
+            .catch(err => {
+                console.error('Keycloak init error:', err);
+                this.initialized = false;
+                throw err;
+            });
     }
 
     /** Redirect to Keycloak login */
     login() {
-        this.keycloak.login();
+        return this.keycloak.login();
     }
 
-    /** Logout from Keycloak and redirect to app root */
+    /** Logout from Keycloak */
     logout() {
         this.keycloak.logout({ redirectUri: window.location.origin });
+        this.clearTokenRefresh();
     }
 
-    /** Retrieve current access token */
-    getToken() {
-        return this.token;
+    /** Get current access token with automatic refresh */
+    async getToken() {
+        if (!this.initialized) {
+            throw new Error('Auth service not initialized');
+        }
+
+        try {
+            await this.keycloak.updateToken(5);
+            return this.keycloak.token;
+        } catch (error) {
+            console.error('Failed to refresh token:', error);
+            this.clearTokenRefresh();
+            throw error;
+        }
     }
 
-    /** Setup automatic token refresh before expiry */
+    /** Get user ID from parsed token */
+    getUserId() {
+        if (this.keycloak.tokenParsed) {
+            return this.keycloak.tokenParsed.sub;
+        }
+        return null;
+    }
+
+    /** Setup automatic token refresh */
     setupTokenRefresh() {
+        this.clearTokenRefresh();
         this.tokenRefreshInterval = setInterval(() => {
-            this.keycloak
-                .updateToken(60)
-                .then((refreshed) => {
+            this.keycloak.updateToken(60)
+                .then(refreshed => {
                     if (refreshed) {
-                        this.token = this.keycloak.token;
-                        this.refreshToken = this.keycloak.refreshToken;
-                        console.log('Keycloak token refreshed');
+                        console.debug('Token refreshed in background');
                     }
                 })
-                .catch((err) =>
-                    console.error('Failed to refresh Keycloak token', err)
-                );
+                .catch(err => {
+                    console.error('Background token refresh failed:', err);
+                    this.clearTokenRefresh();
+                });
         }, 60000);
     }
 
-    /** Clear the token refresh interval */
+    /** Clear refresh interval */
     clearTokenRefresh() {
-        clearInterval(this.tokenRefreshInterval);
+        if (this.tokenRefreshInterval) {
+            clearInterval(this.tokenRefreshInterval);
+            this.tokenRefreshInterval = null;
+        }
+    }
+
+    /** Check authentication status */
+    isAuthenticated() {
+        return this.keycloak.authenticated && !this.keycloak.isTokenExpired();
     }
 }
 
