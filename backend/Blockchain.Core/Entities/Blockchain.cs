@@ -36,7 +36,7 @@ public class Blockchain
     /// </summary>
     public void MinePending(string minerAddress)
     {
-        var block = new Block
+        Block block = new Block
         {
             Index          = Chain.Count,
             Timestamp      = DateTime.UtcNow,
@@ -83,13 +83,12 @@ public class Blockchain
         return true;
     }
     
-    public IEnumerable<Transaction> GetPendingTransactions() 
-        => PendingTxs.AsReadOnly();
+    public IEnumerable<Transaction> GetPendingTransactions() => PendingTxs.AsReadOnly();
     
     public decimal GetBalance(string address)
     {
         decimal balance = 0m;
-        foreach (var block in Chain)
+        foreach (Block block in Chain)
         {
             foreach (var tx in block.Transactions)
             {

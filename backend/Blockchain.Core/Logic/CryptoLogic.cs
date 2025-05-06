@@ -60,4 +60,32 @@ public static class CryptoLogic
         byte[] payload = Encoding.UTF8.GetBytes(data);
         return ecdsa.VerifyData(payload, sigBytes, HashAlgorithmName.SHA256);
     }
+
+
+    /// <summary>
+    /// Import a Base‑64 PKCS#8 private key into an ECDsa object.
+    /// </summary>
+    public static ECDsa ImportPrivateKey(string base64Pkcs8)
+    {
+        var ecdsa = ECDsa.Create();
+        var pkcs8 = Convert.FromBase64String(base64Pkcs8);
+        ecdsa.ImportPkcs8PrivateKey(pkcs8, out _);
+        return ecdsa;
+    }
+
+    /// <summary>
+    /// Sign the given transaction in‑place (sets its Signature), using its CalculateHash().
+    /// </summary>
+    public static void SignTransaction(Transaction tx, ECDsa privateKey)
+    {
+        // Optional safety check: ensure the private key matches tx.FromAddress
+        var pubDer = privateKey.ExportSubjectPublicKeyInfo();
+        var pubBase64 = Convert.ToBase64String(pubDer);
+        if (pubBase64 != tx.FromAddress)
+            throw new InvalidOperationException("Private key does not match FromAddress.");
+
+        // Compute the hash and sign it
+        var hash = tx.CalculateHash();
+        tx.Signature = SignData(hash, privateKey);
+    }
 }

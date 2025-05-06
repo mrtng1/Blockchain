@@ -1,4 +1,5 @@
 ﻿using Blockchain.Core.Logic;
+using System.Security.Cryptography;
 
 namespace Blockchain.Core.Entities;
 
@@ -27,15 +28,37 @@ public class Transaction
         return CryptoLogic.ComputeArgon2Hash(raw, FromAddress ?? "");
     }
 
-    /// <summary>
-    /// (Stub) verify signature—you’ll plug in real ECDSA/RSA later.
-    /// </summary>
     public bool IsValid()
     {
-        if (FromAddress == null) return true; 
-        if (string.IsNullOrEmpty(Signature)) 
-            throw new InvalidOperationException("No signature on transaction.");
-        // TODO: verify Signature against CalculateHash() and FromAddress’s public key
-        return true;
+        if (FromAddress == null)
+        {
+            // Coinbase transaction (mining reward) - inherently valid.
+            return true;
+        }
+
+        if (string.IsNullOrWhiteSpace(FromAddress) || string.IsNullOrWhiteSpace(Signature))
+        {
+            return false;
+        }
+
+        // Calculate the transaction hash and verify the signature against it
+        var txHash = CalculateHash();
+
+        try
+        {
+            return CryptoLogic.VerifySignature(txHash, Signature, FromAddress);
+        }
+        catch (FormatException)
+        {
+            return false;
+        }
+        catch (CryptographicException)
+        {
+            return false;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
     }
 }

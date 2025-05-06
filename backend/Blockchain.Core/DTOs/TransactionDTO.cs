@@ -7,5 +7,5 @@ public record TransactionDto(
     string FromAddress,
     string ToAddress,
     decimal Amount,
-    string Signature
+    string SenderPrivateKey
 );

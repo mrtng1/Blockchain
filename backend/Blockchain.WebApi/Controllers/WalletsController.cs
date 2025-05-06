@@ -25,10 +25,6 @@ public class WalletsController : ControllerBase
         ));
     }
 
-    /// <summary>
-    /// GET /api/wallets/{address}/balance
-    /// Returns the token balance for a given address.
-    /// </summary>
     [HttpGet("{address}/balance")]
     public ActionResult<BalanceDto> GetBalance(string address, [FromServices] Blockchain.Core.Entities.Blockchain bc)
     {
