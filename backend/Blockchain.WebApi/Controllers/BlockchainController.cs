@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Blockchain.Core.Entities;
 using Blockchain.Core.DTOs;
 using Blockchain.Core.Logic;
+using System.Security.Cryptography;
 
 namespace Blockchain.WebApi.Controllers;
 
@@ -32,9 +33,8 @@ public class BlockchainController : ControllerBase
     [HttpPost("transaction")]  
     public IActionResult CreateTransaction([FromBody] TransactionDto dto)
     {
-        var ecdsa = CryptoLogic.ImportPrivateKey(dto.SenderPrivateKey);
-
-        var tx = new Transaction(dto.FromAddress, dto.ToAddress, dto.Amount)
+        ECDsa ecdsa = CryptoLogic.ImportPrivateKey(dto.SenderPrivateKey);
+        Transaction tx = new Transaction(dto.FromAddress, dto.ToAddress, dto.Amount)
         {
             //Signature = dto.Signature
         };

@@ -56,6 +56,14 @@ export default function Navbar() {
                     Home
                 </Link>
 
+                <Link to="/transaction" style={{ color: 'white', textDecoration: 'none' }}>
+                    Pay
+                </Link>
+
+                <Link to="/wallets" style={{ color: 'white', textDecoration: 'none' }}>
+                    Wallets
+                </Link>
+
                 {isLoggedIn ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                         <span style={{ color: '#00ff9d' }}>Welcome, {username}</span>

@@ -4,6 +4,7 @@ import WalletBalanceSearch from "../../components/WalletBalanceSearch";
 import MineComponent from "../../components/MineComponent";
 import styles from './Home.css';
 import CreateWalletComponent from "../../components/CreateWalletComponent";
+import TransactionComponent from "../../components/TransactionComponent";
 
 const Home = () => (
     <div>

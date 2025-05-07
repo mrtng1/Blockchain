@@ -9,7 +9,7 @@ public class Blockchain
 {
     public List<Block> Chain               { get; } = new();
     public List<Transaction> PendingTxs    { get; private set; } = new();
-    public int Difficulty                  { get; set; } = 2; // block needs to generate a hash starting at least X zeros 
+    public int Difficulty                  { get; set; } = 3; // block needs to generate a hash starting at least X zeros 
     public decimal MiningReward            { get; set; } = 25m;
 
     public Blockchain()

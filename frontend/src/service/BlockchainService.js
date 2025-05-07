@@ -25,3 +25,39 @@ export async function minePending(minerAddress) {
     const data = await response.json();
     return data;
 }
+
+
+/**
+ * Creates a new transaction and adds it to the mempool.
+ *
+ * @param {string} fromAddress
+ * @param {string} toAddress
+ * @param {number} amount
+ * @param {string} senderPrivateKey
+ * @returns {Promise<{ message: string }>} Resolves to an object containing the result message
+ * @throws {Error} if the network request fails or returns non-OK
+ */
+export async function newTransaction(fromAddress, toAddress, amount, senderPrivateKey) {
+    const url = `${API_URL}/api/Blockchain/transaction`;
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            FromAddress: fromAddress,
+            ToAddress: toAddress,
+            Amount: amount,
+            SenderPrivateKey: senderPrivateKey
+        })
+    });
+
+    if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Error creating transaction: ${response.status} ${text}`);
+    }
+
+    const data = await response.json();
+    return data;
+}
