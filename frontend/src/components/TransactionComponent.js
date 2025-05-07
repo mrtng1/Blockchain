@@ -103,7 +103,7 @@ function TransactionComponent() {
                             id="privateKey"
                             value={senderPrivateKey}
                             onChange={(e) => setSenderPrivateKey(e.target.value)}
-                            placeholder="Sender private key"
+                            placeholder="Your private key"
                         />
                     </div>
                     <button type="submit" disabled={loading}>

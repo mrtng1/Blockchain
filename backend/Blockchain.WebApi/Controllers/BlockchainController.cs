@@ -19,7 +19,7 @@ public class BlockchainController : ControllerBase
     public ActionResult<IEnumerable<Block>> GetChain() 
         => Ok(_bc.Chain);
 
-    [HttpGet("block/{index}")]  // GET /api/blockchain/block/2
+    [HttpGet("block/{index}")]  // GET /api/blockchain/block/:id
     public ActionResult<Block> GetBlock(int index)
     {
         if (index < 0 || index >= _bc.Chain.Count)
@@ -53,7 +53,8 @@ public class BlockchainController : ControllerBase
     [HttpPost("mine/{minerAddress}")]  
     public IActionResult Mine(string minerAddress)
     {
-        _bc.MinePending(minerAddress);
+        string decodedAddress = Uri.UnescapeDataString(minerAddress);
+        _bc.MinePending(decodedAddress);
         return Ok(new {
             message     = "Mined successfully",
             latestBlock = _bc.GetLatest()

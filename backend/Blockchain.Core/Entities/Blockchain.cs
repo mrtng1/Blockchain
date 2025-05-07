@@ -31,27 +31,51 @@ public class Blockchain
 
     public Block GetLatest() => Chain.Last();
 
-    /// <summary>
-    /// Collect pending TXs into a block, mine it, award the miner, then reset the pool.
-    /// </summary>
+    ///// <summary> 
+    ///// Collect pending TXs into a block, mine it, award the miner, then reset the pool.
+    ///// </summary>
+    //public void MinePending(string minerAddress) original
+    //{
+    //    Block block = new Block
+    //    {
+    //        Index          = Chain.Count,
+    //        Timestamp      = DateTime.UtcNow,
+    //        Transactions   = new List<Transaction>(PendingTxs),
+    //        PreviousHash   = GetLatest().Hash,
+    //        Nonce          = 0
+    //    };
+    //    block.Mine(Difficulty);
+    //    Chain.Add(block);
+
+    //    // reward for next round
+    //    PendingTxs = new List<Transaction>
+    //    {
+    //        new Transaction(null, minerAddress, MiningReward) 
+    //    };
+    //}
+
     public void MinePending(string minerAddress)
     {
+        // Copy pending transactions into the new block
+        var transactions = new List<Transaction>(PendingTxs);
+
+        // Add mining reward to THIS block
+        transactions.Add(new Transaction(null, minerAddress, MiningReward));
+
         Block block = new Block
         {
-            Index          = Chain.Count,
-            Timestamp      = DateTime.UtcNow,
-            Transactions   = new List<Transaction>(PendingTxs),
-            PreviousHash   = GetLatest().Hash,
-            Nonce          = 0
+            Index = Chain.Count,
+            Timestamp = DateTime.UtcNow,
+            Transactions = transactions, // Include pending + reward
+            PreviousHash = GetLatest().Hash,
+            Nonce = 0
         };
+
         block.Mine(Difficulty);
         Chain.Add(block);
 
-        // reward for next round
-        PendingTxs = new List<Transaction>
-        {
-            new Transaction(null, minerAddress, MiningReward) 
-        };
+        // Clear pending transactions (do NOT include the reward here)
+        PendingTxs.Clear();
     }
 
     /// <summary>

@@ -54,6 +54,11 @@ class AuthService {
             throw new Error('Auth service not initialized');
         }
 
+        if (!this.keycloak.authenticated) {
+            this.clearTokenRefresh();
+            return null;
+        }
+
         try {
             await this.keycloak.updateToken(5);
             return this.keycloak.token;
