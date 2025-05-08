@@ -109,6 +109,4 @@ async function saveWallet(userId, walletAddress, token) {
         console.error(`Error: ${error.message}`);
         throw error;
     }
-
-
 }

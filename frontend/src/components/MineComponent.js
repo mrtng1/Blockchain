@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { minePending } from '../service/BlockchainService';
+import React, { useState, useEffect } from 'react';
+import { minePending, getPendingTransactions } from '../service/BlockchainService';
 import { checkValidHashAddress } from '../service/Utils';
 
 function MineComponent() {
@@ -8,6 +8,20 @@ function MineComponent() {
     const [latestBlock, setLatestBlock] = useState(null);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [pendingTransactions, setPendingTransactions] = useState([]);
+
+    useEffect(() => {
+        const fetchPending = async () => {
+            try {
+                const txs = await getPendingTransactions();
+                setPendingTransactions(txs);
+            } catch (err) {
+                console.error('Failed to fetch pending transactions:', err);
+            }
+        };
+
+        fetchPending();
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -48,6 +62,11 @@ function MineComponent() {
       `}</style>
             <div style={styles.frame}>
                 <h1>Mine Pending Transactions</h1>
+
+                <div style={styles.pendingCount}>
+                    <small>Pending transactions: {pendingTransactions.length}</small>
+                </div>
+
                 <form onSubmit={handleSubmit}>
                     <div>
                         <label htmlFor="minerAddress">Miner Address:</label>
@@ -123,6 +142,11 @@ const styles = {
         animation: 'spin 1s linear infinite',
         marginRight: '8px',
     },
+    pendingCount: {
+        fontSize: '0.8rem',
+        color: '#666',
+        marginBottom: '10px',
+    }
 };
 
 export default MineComponent;

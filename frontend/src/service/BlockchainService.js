@@ -61,3 +61,22 @@ export async function newTransaction(fromAddress, toAddress, amount, senderPriva
     const data = await response.json();
     return data;
 }
+
+export async function getPendingTransactions(){
+    const url = `${API_URL}/api/Blockchain/mempool`;
+    const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },
+    })
+
+    if (!response.ok){
+        const text = await response.text();
+        throw new Error(`Error fetching pending transactions: ${response.status} ${text}`);
+    }
+
+    const data = await response.json();
+    return data;
+}
