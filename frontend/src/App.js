@@ -4,6 +4,7 @@ import Home from './pages/Home/Home';
 import Navbar from './components/Navbar';
 import './App.css';
 import Transaction from "./pages/Transaction/Transaction";
+import WalletsPage from "./pages/Wallets/WalletsPage";
 
 function App() {
 
@@ -14,7 +15,7 @@ function App() {
                 <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/transaction" element={<Transaction />} />
-                    <Route path="/wallets" element={<Transaction />} />
+                    <Route path="/wallets" element={<WalletsPage />} />
                     <Route path="*" element={<h1>404 Not Found</h1>} />
                 </Routes>
             </Router>
