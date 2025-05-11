@@ -1,3 +1,3 @@
 ﻿namespace Blockchain.Core.DTOs;
 
-public record WalletDto(string Address, string PrivateKey);
+public record WalletDto(string Address, string PrivateKey, string Mnemonic);

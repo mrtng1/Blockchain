@@ -16,15 +16,45 @@ public class WalletsController : ControllerBase
     [HttpPost]
     public ActionResult<WalletDto> CreateWallet()
     {
-        var wallet = new Wallet();
+        Wallet wallet = new Wallet();
+
         return Ok(new WalletDto(
             Address: wallet.KeyPair.PublicKey,
-            PrivateKey: Convert.ToBase64String(
-                wallet.KeyPair.PrivateKey.ExportPkcs8PrivateKey()
-            )
+            PrivateKey: Convert.ToBase64String(wallet.KeyPair.PrivateKey.ExportPkcs8PrivateKey()),
+            Mnemonic: wallet.Mnemonic
         ));
     }
-
+    
+    [HttpPost("private-key")]
+    public ActionResult<WalletDto> RecoverWallet([FromBody] MnemonicRecoveryRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request?.Mnemonic))
+        {
+            return BadRequest("Mnemonic is required.");
+        }
+        try
+        {
+            Wallet wallet = new Wallet(request.Mnemonic);
+            return Ok(new WalletDto(
+                Address: wallet.KeyPair.PublicKey,
+                PrivateKey: Convert.ToBase64String(wallet.KeyPair.PrivateKey.ExportPkcs8PrivateKey()),
+                Mnemonic: wallet.Mnemonic
+            ));
+        }
+        catch (ArgumentException ex) 
+        {
+            return BadRequest($"Invalid mnemonic format: {ex.Message}");
+        }
+        catch (FormatException ex)
+        {
+            return BadRequest($"Error recovering wallet (invalid format or checksum): {ex.Message}");
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, "An error occurred while recovering the wallet.");
+        }
+    }
+    
     [HttpGet("{address}/balance")]
     public ActionResult<BalanceDto> GetBalance(string address, [FromServices] Blockchain.Core.Entities.Blockchain bc)
     {

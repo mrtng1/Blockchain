@@ -32,7 +32,8 @@ public class Transaction
     {
         if (FromAddress == null)
         {
-            // Coinbase transaction (mining reward) - inherently valid.
+            // Mining reward
+            // TODO: Make sure its actually a mining reward and not just a null fromAddress
             return true;
         }
 

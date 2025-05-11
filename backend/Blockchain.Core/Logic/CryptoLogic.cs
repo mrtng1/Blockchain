@@ -1,6 +1,5 @@
 ﻿using System.Security.Cryptography;
 using Blockchain.Core.Entities;
-using System;
 using System.Text;
 using Konscious.Security.Cryptography;
 
@@ -27,14 +26,15 @@ public static class CryptoLogic
     /// <summary>
     /// Generates a new ECDSA key-pair on curve P-256.
     /// </summary>
-    public static AsymmetricKeyPair GenerateKeyPair()
-    {
-        var ecdsa = ECDsa.Create(ECCurve.NamedCurves.nistP256);
-        // export public key as DER
-        byte[] pubDer = ecdsa.ExportSubjectPublicKeyInfo();
-        string pubBase64 = Convert.ToBase64String(pubDer);
-        return new AsymmetricKeyPair(ecdsa, pubBase64);
-    }
+    /// Not in use
+    // public static AsymmetricKeyPair GenerateKeyPair()
+    // {
+    //     var ecdsa = ECDsa.Create(ECCurve.NamedCurves.nistP256);
+    //     // export public key as DER
+    //     byte[] pubDer = ecdsa.ExportSubjectPublicKeyInfo();
+    //     string pubBase64 = Convert.ToBase64String(pubDer);
+    //     return new AsymmetricKeyPair(ecdsa, pubBase64);
+    // }
 
     /// <summary>
     /// Signs UTF-8 bytes of `data` with the given private ECDSA key.
@@ -78,7 +78,7 @@ public static class CryptoLogic
     /// </summary>
     public static void SignTransaction(Transaction tx, ECDsa privateKey)
     {
-        // Optional safety check: ensure the private key matches tx.FromAddress
+        // Ensure the private key matches tx.FromAddress
         var pubDer = privateKey.ExportSubjectPublicKeyInfo();
         var pubBase64 = Convert.ToBase64String(pubDer);
         if (pubBase64 != tx.FromAddress)
@@ -87,5 +87,32 @@ public static class CryptoLogic
         // Compute the hash and sign it
         var hash = tx.CalculateHash();
         tx.Signature = SignData(hash, privateKey);
+    }
+    
+    public static AsymmetricKeyPair GenerateKeyPairFromSeed(byte[] seed)
+    {
+        if (seed == null || seed.Length < 32)
+            throw new ArgumentException("Seed must be at least 32 bytes long for a 256-bit private key.", nameof(seed));
+
+        // For nistP256 -> private key is 32 bytes
+        // Take the first 32 bytes of the 64-byte seed
+        // the entire seed is a master key to derive child keys via paths
+        byte[] privateKeyScalar = new byte[32];
+        Array.Copy(seed, 0, privateKeyScalar, 0, 32);
+        
+        ECParameters parameters = new ECParameters
+        {
+            Curve = ECCurve.NamedCurves.nistP256,
+            D = privateKeyScalar
+        };
+
+        // Validate parameters
+        ECDsa ecdsaKey = ECDsa.Create(parameters);
+
+        // Export the public key in SubjectPublicKeyInfo format
+        byte[] publicKeyBytes = ecdsaKey.ExportSubjectPublicKeyInfo();
+        string publicKeyBase64 = Convert.ToBase64String(publicKeyBytes);
+
+        return new AsymmetricKeyPair(ecdsaKey, publicKeyBase64);
     }
 }
