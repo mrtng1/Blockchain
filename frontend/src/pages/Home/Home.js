@@ -11,7 +11,6 @@ const Home = () => (
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '1rem' }}>
             <WalletBalanceSearch />
             <MineComponent />
-            <CreateWalletComponent />
         </div>
     </div>
 );

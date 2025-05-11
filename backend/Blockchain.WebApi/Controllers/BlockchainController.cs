@@ -34,10 +34,7 @@ public class BlockchainController : ControllerBase
     public IActionResult CreateTransaction([FromBody] TransactionDto dto)
     {
         ECDsa ecdsa = CryptoLogic.ImportPrivateKey(dto.SenderPrivateKey);
-        Transaction tx = new Transaction(dto.FromAddress, dto.ToAddress, dto.Amount)
-        {
-            //Signature = dto.Signature
-        };
+        Transaction tx = new Transaction(dto.FromAddress, dto.ToAddress, dto.Amount);
         CryptoLogic.SignTransaction(tx, ecdsa);
         try
         {
@@ -62,34 +59,4 @@ public class BlockchainController : ControllerBase
     }
 
 
-    ///// <summary>
-    ///// Signs a transaction for the given From/To/Amount using the provided private key.
-    ///// Returns the Base‑64 ECDSA signature.
-    ///// </summary>
-    //[HttpPost("sign")]
-    //public IActionResult SignTransaction([FromBody] SignRequestDto dto)
-    //{
-    //    // 1) Import the private key into an ECDsa
-    //    var ecdsa = CryptoLogic.ImportPrivateKey(dto.PrivateKey);
-
-    //    // 2) Build a Transaction (this sets From/To/Amount/Timestamp)
-    //    var tx = new Transaction(dto.FromAddress, dto.ToAddress, dto.Amount);
-
-    //    // 3) Sign it in‑place (will throw if the private key doesn't match FromAddress)
-    //    CryptoLogic.SignTransaction(tx, ecdsa);
-
-    //    // 4) Return the signature
-    //    return Ok(new
-    //    {
-    //        Signature = tx.Signature,
-    //        Hash = tx.CalculateHash() 
-    //    });
-    //}
-
-    //    public record SignRequestDto(
-    //        string FromAddress, 
-    //        string ToAddress, 
-    //        decimal Amount,
-    //        string PrivateKey 
-    //    );
 }
