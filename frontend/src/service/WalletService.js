@@ -35,14 +35,12 @@ export async function getWalletBalance(address) {
  */
 export async function createWallet() {
     const url = `${API_URL}/api/Wallets`;
-    const token = await authService.getToken();
 
     const response = await fetch(url, {
         method: 'POST',
         headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json',
-            //'Authorization': `Bearer ${token}`,
         },
     });
 
@@ -55,58 +53,99 @@ export async function createWallet() {
     const walletData = await response.json();
 
     // Retrieve the wallet address from the response
-    const walletAddress = walletData.address;
+    const walletPublicKey = walletData.address;
+    const walletPrivateKey = walletData.privateKey;
 
-    // Assuming you have the user's ID (maybe from the Keycloak token or user session)
-    const userId = authService.getUserId(); // Replace this with how you get the user ID
+    const userId = authService.getUserId();
 
-    // Save the wallet address to Keycloak
-    await saveWallet(userId, walletAddress, token);
+    await saveWallet(userId, walletPublicKey, walletPrivateKey);
 
     return walletData;
 }
 
 
 /**
- * Saves the wallet address to the user's attributes in Keycloak.
+ * Adds a wallet to the list stored in localStorage, only if it's not already there.
  *
- * @param {string} userId The Keycloak user ID to update.
- * @param {string} walletAddress The wallet address to store.
- * @param {string} token The Auth Token.
- * @returns {Promise<void>} Resolves when the wallet address is saved.
- * @throws {Error} if the network request fails or returns non-OK.
+ * @param {string} walletName Name of the wallet.
+ * @param {string} walletPublicKey The public key of the wallet.
+ * @param {string} walletPrivateKey The private key of the wallet.
  */
-async function saveWallet(userId, walletAddress, token) {
-    //const token = authService.getToken(); // Assuming you have a token service to fetch the token
-    const url = `${KEYCLOAK_URL}/admin/realms/${KEYCLOAK_REALM}/users/${userId}`;
-
-    const headers = {
-        //'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`,
-    };
-
-    const body = JSON.stringify({
-        attributes: {
-            walletAddress: walletAddress,
-        },
-    });
-
+export function saveWallet(walletName, walletPublicKey, walletPrivateKey) {
     try {
-        const response = await fetch(url, {
-            method: 'PUT',
-            headers: headers,
-            body: body,
-        });
+        const existing = JSON.parse(localStorage.getItem('wallets')) || [];
 
-        if (!response.ok) {
-            const text = await response.text();
-            throw new Error(`Error saving wallet address: ${response.status} ${text}`);
+        const alreadyExists = existing.some(
+            (w) => w.walletPublicKey === walletPublicKey
+        );
+
+        if (alreadyExists) {
+            console.warn(`Wallet with public key ${walletPublicKey} already exists. Skipping save.`);
+            return;
         }
 
-        console.log('Wallet address saved successfully');
+        const newWallet = {
+            walletName,
+            walletPublicKey,
+            walletPrivateKey,
+        };
+
+        existing.push(newWallet);
+        localStorage.setItem('wallets', JSON.stringify(existing));
+
+        console.log('Wallet added successfully');
     } catch (error) {
-        console.error(`Error: ${error.message}`);
+        console.error(`Error saving wallet: ${error.message}`);
         throw error;
     }
+}
+
+
+/**
+ * Retrieves the list of wallets from localStorage.
+ *
+ * @returns {Array} Array of wallet objects.
+ */
+export function getWallets() {
+    try {
+        return JSON.parse(localStorage.getItem('wallets')) || [];
+    } catch (error) {
+        console.error(`Error retrieving wallets: ${error.message}`);
+        return [];
+    }
+}
+
+/**
+ * Recovers a wallet using a mnemonic phrase.
+ *
+ * @param {string} walletName Name to store the recovered wallet under.
+ * @param {string} mnemonic The 12-word (or more) mnemonic phrase.
+ * @returns {Promise<{ address: string, privateKey: string, mnemonic: string }>} Resolves to the recovered wallet DTO.
+ * @throws {Error} if the recovery fails or backend returns an error.
+ */
+export async function recoverWallet( mnemonic) {
+    const url = `${API_URL}/api/wallets/recover`;
+
+    alert(mnemonic);
+
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ mnemonic }),
+    });
+
+    if (!response.ok) {
+        const text = await response.text();
+        throw new Error(`Error recovering wallet: ${response.status} ${text}`);
+    }
+
+    const walletData = await response.json();
+
+    // Save to localStorage
+    saveWallet("walletName", walletData.address, walletData.privateKey);
+
+    return walletData;
 }

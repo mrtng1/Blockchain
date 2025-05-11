@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { getWalletBalance } from '../service/WalletService';
 import { checkValidHashAddress } from '../service/Utils';
 
-function WalletBalanceSearch() {
+function WalletBalanceSearchComponent() {
     const [address, setAddress] = useState('');
     const [balance, setBalance] = useState(null);
     const [error, setError] = useState(null);
@@ -77,4 +77,4 @@ const styles = {
     }
 };
 
-export default WalletBalanceSearch;
+export default WalletBalanceSearchComponent;

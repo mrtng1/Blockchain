@@ -25,7 +25,7 @@ public class WalletsController : ControllerBase
         ));
     }
     
-    [HttpPost("private-key")]
+    [HttpPost("recover")]
     public ActionResult<WalletDto> RecoverWallet([FromBody] MnemonicRecoveryRequest request)
     {
         if (string.IsNullOrWhiteSpace(request?.Mnemonic))
