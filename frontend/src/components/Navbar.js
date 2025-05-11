@@ -51,22 +51,22 @@ export default function Navbar() {
         }}>
             <h3 style={{ margin: 0 }}>Crypto-blockchain</h3>
 
-            <div style={{ display: 'flex', gap: '1rem', marginLeft: 'auto' }}>
+            <div style={{ display: 'flex', gap: '1rem' }}>
                 <Link to="/" style={{ color: 'white', textDecoration: 'none' }}>
                     Home
                 </Link>
-
                 <Link to="/transaction" style={{ color: 'white', textDecoration: 'none' }}>
                     Pay
                 </Link>
-
                 <Link to="/wallets" style={{ color: 'white', textDecoration: 'none' }}>
                     Wallets
                 </Link>
+            </div>
 
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginLeft: 'auto' }}>
                 {isLoggedIn ? (
                     <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                        <span style={{ color: '#00ff9d' }}>Welcome, {username}</span>
+                        <span style={{ color: '#00ff9d' }}>Logged in as: {username}</span>
                         <button
                             onClick={handleLogout}
                             style={buttonStyle}
@@ -76,15 +76,20 @@ export default function Navbar() {
                             Logout
                         </button>
                     </div>
-                ) : (
-                    <button
-                        onClick={handleLogin}
-                        style={buttonStyle}
-                        onMouseOver={e => e.currentTarget.style.backgroundColor = '#ffffff22'}
-                        onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}
-                    >
-                        Login
-                    </button>
+                ) :
+                    (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            <span style={{ color: '#00ff9d' }}>Guest</span>
+                            <button
+                                onClick={handleLogin}
+                                style={buttonStyle}
+                                onMouseOver={e => e.currentTarget.style.backgroundColor = '#ffffff22'}
+                                onMouseOut={e => e.currentTarget.style.backgroundColor = 'transparent'}
+                            >
+                                Login
+                            </button>
+                        </div>
+
                 )}
             </div>
         </nav>
