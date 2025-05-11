@@ -33,7 +33,7 @@ export async function getWalletBalance(address) {
  * @returns {Promise<{ address: string, privateKey: string }>} Resolves to the new wallet DTO.
  * @throws {Error} if the network request fails or returns non-OK.
  */
-export async function createWallet() {
+export async function createWallet(walletName) {
     const url = `${API_URL}/api/Wallets`;
 
     const response = await fetch(url, {
@@ -56,9 +56,7 @@ export async function createWallet() {
     const walletPublicKey = walletData.address;
     const walletPrivateKey = walletData.privateKey;
 
-    const userId = authService.getUserId();
-
-    await saveWallet(userId, walletPublicKey, walletPrivateKey);
+    await saveWallet(walletName, walletPublicKey, walletPrivateKey);
 
     return walletData;
 }
