@@ -35,9 +35,10 @@ public class BlockchainController : ControllerBase
     {
         ECDsa ecdsa = CryptoLogic.ImportPrivateKey(dto.SenderPrivateKey);
         Transaction tx = new Transaction(dto.FromAddress, dto.ToAddress, dto.Amount);
-        CryptoLogic.SignTransaction(tx, ecdsa);
+        
         try
         {
+            CryptoLogic.SignTransaction(tx, ecdsa);
             _bc.AddTransaction(tx);
             return Ok(new { message = "Added to mempool" });
         }

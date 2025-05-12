@@ -1,16 +1,16 @@
 ﻿namespace Blockchain.Core.Entities;
 
-// Blockchain.cs
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.ComponentModel.DataAnnotations;
 
 public class Blockchain
 {
     public List<Block> Chain               { get; } = new();
     public List<Transaction> PendingTxs    { get; private set; } = new();
     public int Difficulty                  { get; set; } = 3; // block needs to generate a hash starting at least X zeros 
-    public decimal MiningReward            { get; set; } = 25m;
+    public decimal MiningReward            { get; set; } = 2.5m;
 
     public Blockchain()
     {
@@ -31,29 +31,6 @@ public class Blockchain
 
     public Block GetLatest() => Chain.Last();
 
-    ///// <summary> 
-    ///// Collect pending TXs into a block, mine it, award the miner, then reset the pool.
-    ///// </summary>
-    //public void MinePending(string minerAddress) original
-    //{
-    //    Block block = new Block
-    //    {
-    //        Index          = Chain.Count,
-    //        Timestamp      = DateTime.UtcNow,
-    //        Transactions   = new List<Transaction>(PendingTxs),
-    //        PreviousHash   = GetLatest().Hash,
-    //        Nonce          = 0
-    //    };
-    //    block.Mine(Difficulty);
-    //    Chain.Add(block);
-
-    //    // reward for next round
-    //    PendingTxs = new List<Transaction>
-    //    {
-    //        new Transaction(null, minerAddress, MiningReward) 
-    //    };
-    //}
-
     public void MinePending(string minerAddress)
     {
         // Copy pending transactions into the new block
@@ -66,7 +43,7 @@ public class Blockchain
         {
             Index = Chain.Count,
             Timestamp = DateTime.UtcNow,
-            Transactions = transactions, // Include pending + reward
+            Transactions = transactions,
             PreviousHash = GetLatest().Hash,
             Nonce = 0
         };
@@ -74,19 +51,53 @@ public class Blockchain
         block.Mine(Difficulty);
         Chain.Add(block);
 
-        // Clear pending transactions (do NOT include the reward here)
+        // Clear pending transactions 
         PendingTxs.Clear();
     }
 
     /// <summary>
-    /// Add a new, valid transaction to the pending pool.
+    /// Add a new, valid transaction to the pending pool, if the sender has sufficient funds.
     /// </summary>
     public void AddTransaction(Transaction tx)
     {
+        // Mining reward transactions don't have a FromAddress
+        if (tx.FromAddress == null)
+        {
+            if (!tx.IsValid())
+            {
+                throw new ValidationException("Transaction is not valid.");
+            }
+            PendingTxs.Add(tx);
+            return; 
+        }
+
         if (string.IsNullOrEmpty(tx.FromAddress) || string.IsNullOrEmpty(tx.ToAddress))
             throw new ArgumentException("Transaction must include both from and to addresses.");
-        if (!tx.IsValid())
-            throw new InvalidOperationException("Cannot add invalid transaction.");
+
+        if (tx.Amount <= 0)
+            throw new ArgumentException("Transaction amount must be positive.");
+
+        if (!tx.IsValid()) 
+            throw new InvalidOperationException("Cannot add invalid (bad signature) transaction.");
+
+        decimal currentBalanceOnChain = GetBalance(tx.FromAddress);
+
+        // Calculate how much this sender has already committed in other pending transactions
+        decimal pendingOutgoingAmount = PendingTxs
+            .Where(ptx => ptx.FromAddress == tx.FromAddress)
+            .Sum(ptx => ptx.Amount);
+
+        decimal availableBalance = currentBalanceOnChain - pendingOutgoingAmount;
+
+        if (tx.Amount > availableBalance)
+        {
+            throw new InvalidOperationException($"Insufficient funds. " +
+                                                $"Requested: {tx.Amount}, " +
+                                                $"Available (after other pending tx): {availableBalance}, " +
+                                                $"Chain Balance: {currentBalanceOnChain}, " +
+                                                $"Total Pending Outgoing: {pendingOutgoingAmount}");
+        }
+
         PendingTxs.Add(tx);
     }
 
