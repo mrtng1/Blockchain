@@ -42,7 +42,10 @@ services:
     stdin_open: true
     tty: true
     environment:
-      REACT_APP_BACKEND_URL: http://localhost:5215
+      REACT_APP_API_BASE_URL: http://localhost:5215
+      REACT_APP_KEYCLOAK_URL: http://localhost:8080
+      REACT_APP_KEYCLOAK_REALM: blockchain
+      REACT_APP_KEYCLOAK_CLIENT: blockchainapp
     depends_on:
       - backend
       - keycloak
