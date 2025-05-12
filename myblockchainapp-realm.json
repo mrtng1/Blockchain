@@ -1,6 +1,6 @@
 {
   "id" : "3334ca6c-932d-472a-af64-20ec9ce766f4",
-  "realm" : "master",
+  "realm" : "blockchain",
   "displayName" : "Keycloak",
   "displayNameHtml" : "<div class=\"kc-logo-text\"><span>Keycloak</span></div>",
   "notBefore" : 0,
@@ -400,28 +400,6 @@
     "disableableCredentialTypes" : [ ],
     "requiredActions" : [ ],
     "realmRoles" : [ "admin", "default-roles-master" ],
-    "notBefore" : 0,
-    "groups" : [ ]
-  }, {
-    "id" : "9b6c4cd5-cae1-4b0f-bf91-0da405240eb3",
-    "createdTimestamp" : 1746186863172,
-    "username" : "margru01",
-    "enabled" : true,
-    "totp" : false,
-    "emailVerified" : false,
-    "firstName" : "Martin",
-    "lastName" : "Grulyo",
-    "email" : "mrtngrulyo@gmail.com",
-    "credentials" : [ {
-      "id" : "4ff0436f-0c80-46ad-912c-19bc6c4c24f2",
-      "type" : "password",
-      "createdDate" : 1746186863202,
-      "secretData" : "{\"value\":\"46NEFlKqPzGdWqoKU33+e03GzYP7xb6FprPkZSvj1Vo=\",\"salt\":\"otnHyX7WLY1tzBTC39tzpQ==\",\"additionalParameters\":{}}",
-      "credentialData" : "{\"hashIterations\":27500,\"algorithm\":\"pbkdf2-sha256\",\"additionalParameters\":{}}"
-    } ],
-    "disableableCredentialTypes" : [ ],
-    "requiredActions" : [ ],
-    "realmRoles" : [ "default-roles-master" ],
     "notBefore" : 0,
     "groups" : [ ]
   } ],
