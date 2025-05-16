@@ -7,14 +7,16 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 builder.Services.AddSingleton<Blockchain.Core.Entities.Blockchain>();
+builder.Services.AddSignalR();
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowLocalhost3000", policy =>
     {
         policy.WithOrigins("http://localhost:3000")
-            .AllowAnyHeader() 
-            .AllowAnyMethod(); 
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 builder.Services.AddHttpClient();
@@ -30,5 +32,7 @@ if (app.Environment.IsDevelopment())
 app.UseCors("AllowLocalhost3000");
 app.UseHttpsRedirection();
 app.MapControllers();
+
+app.MapHub<Blockchain.WebApi.Hubs.ChatHub>("/hubs/chat");
 
 app.Run();

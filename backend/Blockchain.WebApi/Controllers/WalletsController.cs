@@ -59,7 +59,7 @@ public class WalletsController : ControllerBase
     public ActionResult<BalanceDto> GetBalance(string address, [FromServices] Blockchain.Core.Entities.Blockchain bc)
     {
         string decodedAddress = Uri.UnescapeDataString(address);
-        var bal = bc.GetBalance(decodedAddress);
-        return Ok(new BalanceDto(address, bal));
+        decimal balance = bc.GetBalance(decodedAddress);
+        return Ok(new BalanceDto(address, balance));
     }
 }

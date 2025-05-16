@@ -21,7 +21,7 @@ const initApp = async () => {
         root.render(
             <div className="error-container">
                 <h1>Application Failed to Initialize</h1>
-                <p>Please refresh the page or try again later.</p>
+                <p>Check if keycloak is running at port 8080...</p>
             </div>
         );
     }
