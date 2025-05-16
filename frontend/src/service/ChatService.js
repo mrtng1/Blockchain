@@ -17,7 +17,7 @@ export class ChatService {
         // Build a new connection
         this.connection = new HubConnectionBuilder()
             .withUrl(
-                `${API_URL}/hubs/chat?userId=${encodeURIComponent(userId)}`,
+                `${API_URL}/hubs/chat?username=${encodeURIComponent(userId)}`,
                 { transport: HttpTransportType.WebSockets }
             )
             .configureLogging(LogLevel.Information)

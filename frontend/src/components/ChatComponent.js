@@ -11,10 +11,10 @@ export default function ChatComponent() {
     const chat = useMemo(() => new ChatService(), []);
 
     useEffect(() => {
-        const myId = authService.getUserId();
-        setMe(myId);
+        const username = authService.getUsername();
+        setMe(username);
 
-        chat.start(myId).catch(console.error);
+        chat.start(username).catch(console.error);
 
         const unsub = chat.onMessage((m) => setMessages((a) => [...a, m]));
         return () => { unsub(); chat.stop(); };
@@ -38,7 +38,7 @@ export default function ChatComponent() {
                     <input
                         className="border p-1 ml-2"
                         style={styles.inputField}
-                        placeholder="Enter recipient user ID"
+                        placeholder="Enter recipient username"
                         value={recipient}
                         onChange={e => setRecipient(e.target.value)}
                     />
@@ -69,7 +69,7 @@ export default function ChatComponent() {
                             <strong>{m.sender === me ? 'Me' : m.sender} &rarr; </strong> {m.content}
                         </li>
                     ))}
-                    {messages.length === 0 && <p style={styles.noMessages}>No messages yet.</p>}
+                    {messages.length === 0 && <p style={styles.noMessages}>No messages ...</p>}
                 </ul>
             </div>
         </div>

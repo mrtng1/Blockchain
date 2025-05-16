@@ -77,6 +77,10 @@ class AuthService {
         return null;
     }
 
+    getUsername() {
+        return this.keycloak.tokenParsed?.preferred_username;
+    }
+
     /** Setup automatic token refresh */
     setupTokenRefresh() {
         this.clearTokenRefresh();
