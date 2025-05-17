@@ -11,19 +11,47 @@ export default function ChatComponent() {
     const chat = useMemo(() => new ChatService(), []);
 
     useEffect(() => {
-        const username = authService.getUsername();
-        setThisUser(username);
-        chat.start(username).catch(console.error);
-        const unsub = chat.onMessage(m => setMessages(a => [...a, m]));
-        return () => { unsub(); chat.stop(); };
+        let isActive = true;
+
+        const initializeChat = async () => {
+            try {
+                const username = authService.getUsername();
+                if (!username) return;
+
+                await chat.start(username);
+                if (isActive) setThisUser(username);
+
+                const unsub = chat.onMessage(m => {
+                    if (isActive) setMessages(prev => [...prev, m]);
+                });
+
+                return () => unsub();
+            } catch (error) {
+                console.error("Chat initialization failed:", error);
+            }
+        };
+
+        initializeChat();
+        return () => {
+            isActive = false;
+            chat.stop().catch(() => {});
+        };
     }, [chat]);
 
-    const handleSend = () => {
+    const handleSend = async () => {
         if (!recipient || !text) return;
-        chat.sendPrivateMessage({ Sender: thisUser, Recipient: recipient, Content: text })
-            .catch(console.error);
-        setText('');
-        setMessages(prev => [...prev, { sender: thisUser, recipient, content: text }]);
+
+        try {
+            await chat.sendPrivateMessage({ Recipient: recipient, Content: text });
+            setText('');
+            setMessages(prev => [...prev, {
+                sender: thisUser,
+                recipient,
+                content: text
+            }]);
+        } catch (error) {
+            console.error("Message send error:", error);
+        }
     };
 
     return (

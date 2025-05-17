@@ -1,37 +1,52 @@
-// src/services/ChatService.js
 import {HubConnectionBuilder, LogLevel, HttpTransportType } from "@microsoft/signalr";
 import { API_URL } from "../environment";
+import { EncryptionService } from "./EncryptionService";
 
 export class ChatService {
     constructor() {
-        this.handlers   = [];
+        this.handlers = [];
         this.connection = null;
+        this.encryption = new EncryptionService();
     }
 
-    start(userId) {
-        // Stop old connections
-        if (this.connection) {
-            this.connection.stop();
+    async start(userId) {
+        try {
+            await this.encryption.initialize();
+            this.userId = userId;
+
+            if (this.connection) {
+                await this.connection.stop();
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+
+            this.connection = new HubConnectionBuilder()
+                .withUrl(`${API_URL}/hubs/chat?username=${encodeURIComponent(userId)}`, {
+                    transport: HttpTransportType.WebSockets,
+                    skipNegotiation: true
+                })
+                .configureLogging(LogLevel.Warning)
+                .build();
+
+            this.connection.on("ReceiveEncryptedMessage", async (msg) => {
+                try {
+                    const decrypted = await this.encryption.decryptMessage(msg.content);
+                    this.handlers.forEach(h => h({
+                        ...msg,
+                        content: decrypted
+                    }));
+                } catch (error) {
+                    console.error('Decryption failed for message:', {
+                        content: msg.content,
+                        error: error.message
+                    });
+                }
+            });
+
+            await this.connection.start();
+        } catch (error) {
+            console.error("Connection failed:", error);
+            throw error;
         }
-
-        // Build a new connection
-        this.connection = new HubConnectionBuilder()
-            .withUrl(
-                `${API_URL}/hubs/chat?username=${encodeURIComponent(userId)}`,
-                { transport: HttpTransportType.WebSockets }
-            )
-            .configureLogging(LogLevel.Information)
-            .build();
-
-        // wire up incoming
-        this.connection.on("ReceiveEncryptedMessage", (msg) =>
-            this.handlers.forEach((h) => h(msg))
-        );
-
-        // start
-        return this.connection
-            .start()
-            .then(() => console.log("SignalR connected, ID=", this.connection.connectionId));
     }
 
     stop() {
@@ -45,12 +60,19 @@ export class ChatService {
         };
     }
 
-    sendPrivateMessage({ Sender, Recipient, Content }) {
-        console.log("SendPrivateMessage:", { Recipient, Content });
-        return this.connection.invoke("SendPrivateMessage", {
-            Sender,
-            Recipient,
-            Content,
-        });
+    async sendPrivateMessage({ Recipient, Content }) {
+        try {
+            const encrypted = await this.encryption.encryptMessage(Content);
+            console.log('Sending encrypted:', encrypted);
+
+            return this.connection.invoke("SendPrivateMessage", {
+                Sender: this.userId,
+                Recipient,
+                Content: encrypted
+            });
+        } catch (error) {
+            console.error("Send failed:", error);
+            throw error;
+        }
     }
 }

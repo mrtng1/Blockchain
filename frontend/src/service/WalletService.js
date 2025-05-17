@@ -1,5 +1,4 @@
-import { API_URL, KEYCLOAK_URL, KEYCLOAK_CLIENT, KEYCLOAK_REALM } from '../environment';
-import authService from "./AuthService";
+import { API_URL } from '../environment';
 
 /**
  * Fetches the token balance for a given wallet address.
