@@ -3,42 +3,37 @@ import { ChatService } from '../service/ChatService';
 import authService from '../service/AuthService';
 
 export default function ChatComponent() {
-    const [me,        setMe]        = useState(null);
+    const [thisUser, setThisUser] = useState(null);
     const [recipient, setRecipient] = useState('');
-    const [text,      setText]      = useState('');
-    const [messages,  setMessages]  = useState([]);
+    const [text, setText] = useState('');
+    const [messages, setMessages] = useState([]);
 
     const chat = useMemo(() => new ChatService(), []);
 
     useEffect(() => {
         const username = authService.getUsername();
-        setMe(username);
-
+        setThisUser(username);
         chat.start(username).catch(console.error);
-
-        const unsub = chat.onMessage((m) => setMessages((a) => [...a, m]));
+        const unsub = chat.onMessage(m => setMessages(a => [...a, m]));
         return () => { unsub(); chat.stop(); };
     }, [chat]);
 
     const handleSend = () => {
         if (!recipient || !text) return;
-        chat.sendPrivateMessage({ Sender: me, Recipient: recipient, Content: text })
+        chat.sendPrivateMessage({ Sender: thisUser, Recipient: recipient, Content: text })
             .catch(console.error);
         setText('');
-        messages.push({ sender: me, content: text });
+        setMessages(prev => [...prev, { sender: thisUser, recipient, content: text }]);
     };
 
     return (
         <div style={styles.frame}>
             <div className="p-4">
-                <h2 className="mb-2">You: {me}</h2>
-
                 <label className="block mb-2">
-                    Recipient ID:
                     <input
                         className="border p-1 ml-2"
                         style={styles.inputField}
-                        placeholder="Enter recipient username"
+                        placeholder="Recipient username"
                         value={recipient}
                         onChange={e => setRecipient(e.target.value)}
                     />
@@ -48,7 +43,7 @@ export default function ChatComponent() {
                     <input
                         className="border p-1 flex-1"
                         style={styles.inputField}
-                        placeholder="Message content"
+                        placeholder="..."
                         value={text}
                         onChange={e => setText(e.target.value)}
                     />
@@ -63,13 +58,22 @@ export default function ChatComponent() {
                 </div>
 
                 <h3 style={styles.messageHeader}>Messages:</h3>
-                <ul className="list-disc pl-5" style={styles.messageList}>
+                <ul style={styles.messageList}>
+                    {messages.length === 0 && (
+                        <p style={styles.noMessages}>No messages ...</p>
+                    )}
                     {messages.map((m, i) => (
-                        <li key={i} style={styles.messageItem}>
-                            <strong>{m.sender === me ? 'Me' : m.sender} &rarr; </strong> {m.content}
+                        <li key={i} style={styles.messageBlock}>
+                            <div style={styles.messageHeaderBlock}>
+                <span style={styles.fromTo}>
+                  {m.sender === thisUser ? 'Me' : m.sender} → {m.recipient === thisUser ? 'Me' : m.recipient}
+                </span>
+                            </div>
+                            <div style={styles.contentBlock}>
+                                {m.content}
+                            </div>
                         </li>
                     ))}
-                    {messages.length === 0 && <p style={styles.noMessages}>No messages ...</p>}
                 </ul>
             </div>
         </div>
@@ -108,22 +112,35 @@ const styles = {
     },
     messageList: {
         listStyleType: 'none',
-        paddingLeft: '0',
+        paddingLeft: 0,
         maxHeight: '300px',
         overflowY: 'auto',
-        border: '1px solid #eee',
-        padding: '10px',
-        borderRadius: '4px',
-        backgroundColor: '#fff',
-    },
-    messageItem: {
-        padding: '8px 0',
-        borderBottom: '1px solid #eee',
-        color: '#555',
     },
     noMessages: {
         textAlign: 'center',
         color: '#888',
         padding: '10px',
-    }
+    },
+    messageBlock: {
+        marginBottom: '8px',
+        padding: '6px 10px',
+        border: '1px solid #eee',
+        borderRadius: '6px',
+        backgroundColor: '#fafafa',
+        fontSize: '0.9em',
+    },
+    messageHeaderBlock: {
+        marginBottom: '4px',
+        fontWeight: 'bold',
+        fontSize: '0.85em',
+        color: '#555',
+    },
+    fromTo: {
+        display: 'inline-block',
+    },
+    contentBlock: {
+        fontSize: '0.9em',
+        color: '#333',
+        wordBreak: 'break-word',
+    },
 };
