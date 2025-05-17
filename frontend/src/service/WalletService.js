@@ -124,8 +124,6 @@ export function getWallets() {
 export async function recoverWallet( mnemonic) {
     const url = `${API_URL}/api/wallets/recover`;
 
-    alert(mnemonic);
-
     const response = await fetch(url, {
         method: 'POST',
         headers: {
@@ -143,7 +141,7 @@ export async function recoverWallet( mnemonic) {
     const walletData = await response.json();
 
     // Save to localStorage
-    saveWallet("walletName", walletData.address, walletData.privateKey);
+    saveWallet("recoveredWallet", walletData.address, walletData.privateKey);
 
     return walletData;
 }

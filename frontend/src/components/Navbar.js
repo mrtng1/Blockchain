@@ -1,4 +1,3 @@
-// src/components/Navbar.js
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import authService from '../service/AuthService';
@@ -79,7 +78,6 @@ export default function Navbar() {
                 ) :
                     (
                         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                            <span style={{ color: '#00ff9d' }}>Guest</span>
                             <button
                                 onClick={handleLogin}
                                 style={buttonStyle}
