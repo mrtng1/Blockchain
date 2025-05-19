@@ -207,7 +207,7 @@ export default function ChatComponent() {
                 <p style={{ textAlign: 'center', padding: '20px', color: 'red' }}>
                     <strong>Error:</strong> {keyExchangeError}
                 </p>
-                <button onClick={handleDisconnectOrChangePeer} style={{...styles.button, backgroundColor: '#6c757d', display: 'block', margin: '10px auto'}}>Try New Peer</button>
+                <button onClick={handleDisconnectOrChangePeer} style={{...styles.button, backgroundColor: '#6c757d', display: 'block', margin: '10px auto'}}>Try Again</button>
             </div>
         );
     }
@@ -223,7 +223,7 @@ export default function ChatComponent() {
                         Chatting with: <strong>{confirmedPeerUsername}</strong>
                     </div>
                     <button onClick={handleDisconnectOrChangePeer} style={{...styles.button, backgroundColor: '#6c757d', padding: '5px 10px'}}>
-                        Change Peer
+                        Leave Conversation
                     </button>
                 </div>
 

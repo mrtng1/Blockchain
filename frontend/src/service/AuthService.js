@@ -1,5 +1,6 @@
 import Keycloak from 'keycloak-js';
 import { KEYCLOAK_URL, KEYCLOAK_REALM, KEYCLOAK_CLIENT } from '../environment';
+import {EncryptionService} from "./EncryptionService";
 
 class AuthService {
     constructor() {
@@ -10,6 +11,7 @@ class AuthService {
         });
         this.initialized = false;
         this.tokenRefreshInterval = null;
+        this.encryption = new EncryptionService();
     }
 
     /**
@@ -27,6 +29,9 @@ class AuthService {
                 this.initialized = true;
                 if (authenticated) {
                     this.setupTokenRefresh();
+
+                    // set up KeyPair
+                    this.encryption.generateKeyPair();
                 }
                 return authenticated;
             })

@@ -4,23 +4,27 @@ import { EncryptionService } from "./EncryptionService";
 
 export class ChatService {
     constructor() {
+        // User Data
         this.userId = null;
         this.peerUsername = null;
+
+        // Message Handlers
         this.handlers = [];
         this.keyExchangeCompleteHandlers = [];
         this.connection = null;
         this.encryption = new EncryptionService();
 
+        // Exchange status flags
         this.hasSentKey = false;
         this.hasReceivedKey = false;
 
+        // Public keys
         this.myPublicKey = null;
         this.otherPublicKey = null;
     }
 
     onKeyExchangeComplete(handler) {
         this.keyExchangeCompleteHandlers.push(handler);
-        // If keys are already exchanged when handler is registered, call it immediately
         if (this.areKeysExchanged()) {
             handler();
         }
@@ -35,26 +39,21 @@ export class ChatService {
 
     checkAndNotifyKeyExchangeCompletion() {
         if (this.areKeysExchanged()) {
-            //console.log("Key exchange complete My Key:", this.myPublicKey, "Other Key:", this.otherPublicKey);
             this.keyExchangeCompleteHandlers.forEach(h => h());
-        } else {
-            //console.log("Key exchange status: sent", this.hasSentKey, "received", this.hasReceivedKey, "myKeySet", !!this.myPublicKey, "otherKeySet", !!this.otherPublicKey);
         }
     }
 
     async start(userId, peerUsername) {
         try {
-            await this.encryption.initialize();
+            //await this.encryption.initialize();
             this.userId = userId;
 
-            const { publicKeyBase64, keyPair } = await this.encryption.generateKeyPair();
+            if (!localStorage.getItem("thisUserPublicKey") || !localStorage.getItem("thisUserPrivateKey")) {
+                await this.encryption.generateKeyPair();
+            }
+            this.myPublicKey = localStorage.getItem("thisUserPublicKey");
 
-            const exportedPrivateKey = await window.crypto.subtle.exportKey("pkcs8", keyPair.privateKey);
-            const privateKeyBase64 = this.encryption.arrayBufferToBase64(exportedPrivateKey);
-            localStorage.setItem("thisUserPrivateKey", privateKeyBase64);
-            localStorage.setItem("thisUserPublicKey", publicKeyBase64);
-
-            this.myPublicKey = publicKeyBase64;
+            //await this.encryption.generateKeyPair();
 
             this.connection = new HubConnectionBuilder()
                 .withUrl(`${API_URL}/hubs/chat?username=${encodeURIComponent(userId)}`, {
@@ -90,8 +89,6 @@ export class ChatService {
                     if (!this.areKeysExchanged()) {
                         needsToSendOurKey = true;
                     }
-                } else {
-                    //console.warn(`⚠️ Received a new, different public key ${otherUserPublicKey} after ${this.otherPublicKey} was already set. This is unexpected. Investigating...`);
                 }
 
                 if (needsToSendOurKey && this.connection.state === "Connected" && this.myPublicKey) {
@@ -107,24 +104,22 @@ export class ChatService {
                     }
                 }
 
-                //if (isFirstTimeReceipt) {
-                    //console.log("🔑 Key exchange initiated. Waiting for other user to send their public key...");
-                //}
 
-
-                // Always check for completion after processing any received key
+                // Public Key Exchange Complete
                 this.checkAndNotifyKeyExchangeCompletion();
+
+                // Construct and set a new SharedSecret from peers public key
+                await this.encryption.deriveSharedSecret(this.otherPublicKey.publicKey);
             });
 
             await this.connection.start();
 
             if (this.connection.state === "Connected" && this.myPublicKey && !this.hasSentKey) {
-                const otherUsername = this.userId === "admin" ? "margru01" : "admin";
                 try {
                     await this.connection.invoke("ExchangePublicKeys", {
                         SenderUsername: this.userId,
                         SenderPublicKey: this.myPublicKey,
-                        RecipientUsername: otherUsername
+                        RecipientUsername: peerUsername
                     });
                     this.hasSentKey = true;
                     this.checkAndNotifyKeyExchangeCompletion();
@@ -147,7 +142,6 @@ export class ChatService {
     }
 
     stop() {
-        console.log("🔌 Stopping SignalR connection...");
         this.hasSentKey = false;
         this.hasReceivedKey = false;
         this.myPublicKey = null;
