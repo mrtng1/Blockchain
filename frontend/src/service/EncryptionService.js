@@ -67,6 +67,30 @@ export class EncryptionService {
         }
     }
 
+    async generateKeyPair() {
+        try {
+            const keyPair = await window.crypto.subtle.generateKey(
+                {
+                    name: "ECDSA",
+                    namedCurve: "P-256",
+                },
+                true,
+                ["sign", "verify"]
+            );
+
+            const exportedPublicKey = await window.crypto.subtle.exportKey("spki", keyPair.publicKey);
+            const publicKeyBase64 = this.arrayBufferToBase64(exportedPublicKey);
+
+            return {
+                keyPair,
+                publicKeyBase64,
+            };
+        } catch (error) {
+            console.error("Key pair generation failed:", error);
+            throw error;
+        }
+    }
+
     // Robust Base64 handling with URL-safe support
     arrayBufferToBase64(buffer) {
         let binary = '';
